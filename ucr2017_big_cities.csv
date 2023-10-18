@@ -1,0 +1,19 @@
+"","ori","year","agency_name","state","population","actual_murder","actual_rape_total","actual_robbery_total","actual_assault_aggravated"
+"1","AZ00723",2017,"phoenix","arizona",1644177,157,1142,3293,7919
+"2","CA01900",2017,"los angeles","california",1042867,71,327,1566,4154
+"3","CA01942",2017,"los angeles","california",4007147,281,2455,10814,16957
+"4","CA03711",2017,"san diego","california",1424116,35,559,1410,3217
+"5","CA04313",2017,"san jose","california",1037529,32,571,1376,2209
+"6","FL01300",2017,"miami-dade","florida",1213610,90,474,1383,4010
+"7","ILCPD00",2017,"chicago","illinois",2706171,653,1762,11887,15435
+"8","MD01604",2017,"montgomery county pd","maryland",1034920,13,230,613,538
+"9","NV00201",2017,"las vegas metro pd","nevada",1627244,205,1296,3436,5134
+"10","NY02900",2017,"nassau","new york",1069880,10,28,416,659
+"11","NY03030",2017,"new york","new york",8616333,292,2375,13995,29771
+"12","NY05101",2017,"suffolk county pd","new york",1333228,22,64,473,868
+"13","PAPEP00",2017,"philadelphia","pennsylvania",1575595,316,1182,6026,7406
+"14","TX10100",2017,"harris","texas",1878832,92,533,2906,5463
+"15","TXDPD00",2017,"dallas","texas",1338551,167,831,4377,4994
+"16","TXHPD00",2017,"houston","texas",2338235,269,1366,9773,14201
+"17","TXSPD00",2017,"san antonio","texas",1520712,124,1270,2298,7067
+"18","VA02901",2017,"fairfax county pd","virginia",1104993,19,183,430,416
