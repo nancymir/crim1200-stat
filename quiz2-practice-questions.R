@@ -44,10 +44,10 @@ ggplot(ucr_data, aes(x=actual_robbery_total, y=actual_murder)) + geom_point() # 
 #summary(out)
 #plot(out)
 
-lm.output <- lm(actual_robbery_total~actual_murder, ucr_data)
+lm.output <- lm(actual_robbery_total ~ actual_murder, ucr_data)
 summary(lm.output)
 
-par(mfrow=c(2,2))
+par(mfrow=c(1,1))
 plot(lm.output)
 
 #residuals vs fitted plot should look boring 
@@ -65,9 +65,14 @@ ucr_data[7,]
 ucr_data[11,]
 
 # 2.f. Look at the regression plot on the scatterplot.
+ucr_data %>% ggplot(aes(x=actual_murder, y=actual_robbery_total)) + geom_point() + geom_smooth(method='lm', formula= y~x, se=FALSE)
 
 # 2.g. Regardless of how the diagnostics look, interpret the slope coefficient. What can you conclude about the relationship between murder and robberies? (Ignore p-values or any measure of uncertainty associated with the coefficient since we haven't covered that in class.)
 #look at slope estimated, under intercept
+
+lm.output <- lm(actual_robbery_total ~ actual_murder, ucr_data)
+summary(lm.output)
+
 #Each additional murder is associated with 22.78 additional robberies
 
 
