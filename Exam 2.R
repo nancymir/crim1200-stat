@@ -1,25 +1,47 @@
 
+library(tidyverse)
+library(ggplot2)
+
 # 1. Data
+
 
 # a. Load the data and preview it. How many individuals' responses were included?
 
+dat <- read_csv("/Users/nancy/Documents/GitHub/crim1200-stat/data.citizen.complaints.csv") 
 
+view(dat)
+
+nrow(dat)
 
 # 2. EDA single variable: Do EDA, visual and quantitative, and write down in words what are some surprising features of each variable.
 
 # a. Describe citizen.complaints visually and quantitatively
 
+dat %>% ggplot(aes(x=citizen.complaints))+geom_histogram()
+
+summary(dat$citizen.complaints)
+
 # b. Describe reports.filed.by.officer visually and quantitatively
+
+dat %>% ggplot(aes(x=reports.filed.by.officer))+geom_histogram()
+
+summary(dat$reports.filed.by.officer)
 
 # c. Describe bwc visually and quantitatively
 
+dat %>% ggplot(aes(x=bwc))+geom_bar()
 
+table(dat$bwc)
 
 
 # 3. Comparing a quantitative variable and a categorical variable.
 
 # a. EDA two variables: Describe the relationship between the two variables visually and quantitatively. (Remember to include categorical variables in ggplot as "factor(variable)" instead of just "variable".)
 # citizen.complaints and bwc
+
+dat %>% ggplot(aes(x=factor(bwc), y=citizen.complaints)) + geom_boxplot()
+
+with(dat, by(citizen.complaints, bwc, summary))
 
 # b. Statistical test: Run a t-test to test whether there are more citizen complaints when police officers wear a camera than when they do not. What are the null and alternative hypotheses? Is the p-value < 0.05? What can you conclude from this test?
 
