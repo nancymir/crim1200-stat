@@ -4,7 +4,6 @@ library(ggplot2)
 
 # 1. Data
 
-
 # a. Load the data and preview it. How many individuals' responses were included?
 
 dat <- read_csv("/Users/nancy/Documents/GitHub/crim1200-stat/data.citizen.complaints.csv") 
@@ -55,9 +54,18 @@ with(dat, by(citizen.complaints, bwc, summary))
 
 # a. EDA two variables: Describe the relationship between citizen.complaints (y) and reports.filed.by.officer (x).
 
+dat %>% ggplot(aes(x=reports.filed.by.officer, y=citizen.complaints)) + geom_point()
+
 # b. Fit a linear model regressing citizen.complaints (y) onto reports.filed.by.officer (x). Are the assumptions of a linear model satisfied? If so, move on to the next problem. If not, try transforming the data.
+out <- lm(citizen.complaints ~ reports.filed.by.officer, data=dat)
+
+
+par(mfrow=c(2,2))
+plot(out)
 
 # c. Interpret the slope coefficient. What can you say about the relationship between citizen.complaints (y) and reports.filed.by.officer (x)? Do we see more citizen complaints for officers that produce more reports against citizens? 
+
+summary(out)
 
 # d. What does the confidence interval on the slope coefficient tell us?
 

@@ -1,0 +1,222 @@
+---
+title: "R Markdown lesson"
+author: "Maria Cuellar"
+date: "2023-11-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+
+
+library(tidyverse)
+library(ggplot2)
+
+# 1. Data
+
+```{r}
+# a. Load the data and preview it
+
+library(tidyverse)
+dat <- read_csv("/Users/mariacuellar/Documents/Penn/Classes/Statistics for the Social Sciences - Crim 1200/Fall 2023/Exercises/dat.nsduh.small.1.csv")
+```
+
+# NOTE: I am adding the names of the categories for the categorical variables so they show up in the plots
+dat$irsex <- dat$irsex %>% recode_factor("1" = "Male","2" = "Female")
+
+dat$speakengl <- dat$speakengl %>% recode_factor("1" = "v.well", 
+                                                 "2" = "well",
+                                                 "3" = "n.well",
+                                                 "4" = "not.at.all")
+
+dat$sexatract <- dat$sexatract %>% recode_factor("1" = "only.opp", 
+                                                 "2" = "mostly.opp",
+                                                 "3" = "equally",
+                                                 "4" = "mostly.same",
+                                                 "5" = "not.sure") # ignore warning
+
+
+# b. What are the variables in the data? read the codebook
+names(dat)
+
+# c. How many individuals' responses were included?
+nrow(dat)
+
+# 2. EDA single variable: Do EDA, visual and quantitative, and write down in words what are some surprising features of each variable.
+
+# a. age2
+
+# quantitative: 
+table(dat$age2)
+
+# visual:
+barplot(table(dat$age2)) # in base R or
+
+dat %>% ggplot(aes(x=factor(age2))) + geom_bar() # in ggplot
+
+
+# b. sexatract
+
+# quantitative: 
+table(dat$sexatract) # oh there's a 99 in there, which should be an NA. Let's make a new variable w 99 as NA
+dat$sexatract.noNAs <- ifelse(dat$sexatract==99, NA, dat$sexatract)
+
+# add labels to this too:
+dat$sexatract.noNAs <- dat$sexatract.noNAs %>% recode_factor("1" = "only.opp", 
+                                                 "2" = "mostly.opp",
+                                                 "3" = "equally",
+                                                 "4" = "mostly.same",
+                                                 "5" = "not.sure") # ignore warning
+
+
+
+# visual:
+barplot(table(dat$sexatract.noNAs)) # in base R or
+
+dat %>% ggplot(aes(x=factor(sexatract.noNAs))) + geom_bar() # in ggplot
+
+
+# c. speakengl
+
+# quantitative
+table(dat$speakengl)
+
+# visual
+barplot(table(dat$speakengl)) # in base R or
+
+dat %>% ggplot(aes(x=factor(speakengl))) + geom_bar() # in ggplot
+
+
+# d. irsex
+# quantitative
+table(dat$irsex)
+
+# visual
+barplot(table(dat$irsex)) # in base R or
+
+dat %>% ggplot(aes(x=factor(irsex))) + geom_bar() # in ggplot
+
+
+
+
+# 3. EDA two variables: Describe the relationship between the two variables visually and quantitatively.
+
+# a. mjage and cigage
+
+# quantitative
+cor(dat$mjage, dat$cigage)
+
+# visual
+plot(dat$mjage, dat$cigage) # in base R or
+
+dat %>% ggplot(aes(x=mjage, y=cigage)) + geom_point() # in ggplot
+
+
+
+# b. sexatract and speakengl
+
+# quantitative
+table(dat$sexatract, dat$speakengl)
+
+# visual
+barplot(table(dat$sexatract.noNAs, dat$speakengl), beside=TRUE) # in base R or
+
+dat %>% ggplot(aes(x=factor(sexatract.noNAs), fill=factor(speakengl))) + geom_bar() # in ggplot, option 1
+dat %>% ggplot(aes(x=factor(sexatract.noNAs))) + geom_bar() + facet_wrap(~speakengl) + 
+  theme(axis.text.x=element_text(angle=90))  # in ggplot, option 2
+
+
+# notice that I used the variable where 99 was renamed as NA to be clear that 99 is not a new category
+
+
+# c. iralcage and irsex
+
+# visual
+boxplot(dat$iralcage~dat$irsex, ylim=c(0,25)) # in base R or
+
+dat %>% ggplot(aes(y=iralcage, x=factor(irsex))) + geom_boxplot() # in ggplot
+
+# this adds labels
+dat %>% ggplot(aes(y=iralcage, x=factor(irsex))) + geom_boxplot() +
+scale_x_discrete(breaks = c(1, 2), labels = c("Male", "Female")) + 
+  ylab("Count") + xlab("Gender")
+
+# quantitative
+dat %>%
+  group_by(irsex) %>%
+  summarize(num.obs = n(),
+            mean = mean(iralcage),
+            sd = sd(iralcage),
+            median = median(iralcage),
+            IQR = IQR(iralcage),
+            max = max(iralcage),
+            min = min(iralcage)
+            )
+
+
+# 4. EDA two variables for subgroups: How does the relationship between sexatract and spekengl change for women vs men?
+
+# first, here is the relationship between sexatract and speakengl, from earlier:
+dat %>% ggplot(aes(x=factor(sexatract.noNAs))) + geom_bar() + facet_wrap(~speakengl) 
+
+# now we can take the same thing and make the facet_wrap include irsex as well:
+dat %>% ggplot(aes(x=factor(sexatract.noNAs))) + geom_bar() + facet_wrap(speakengl~irsex) + 
+  theme(axis.text.x=element_text(angle=90))
+
+
+
+
+# 5. Regressions: Fit linear models for the following relationships.
+
+# a. Are men more likely to use marijuana earlier than women? Is this relationship statistically significant? What does that mean?
+
+# Let's ignore this question. x here is categorical, and we didn't cover how to do the diagnostics here or interpret the coefficient, so let's skip it.
+
+# b. Are the age of first use of alcohol and the age of first use of marijuana related? Is this relationship statistically significant?
+
+# name the null and alternative hypotheses:
+# H0: there is no relationship between iralcage and mjage
+# HA: there is a (positive?) relationship between iralcage and mjage
+
+# fit a linear model
+out <- lm(iralcage~mjage, dat)
+
+# look at diagnostics
+par(mfrow=c(2,2))
+plot(out.t)
+par(mfrow=c(1,1))
+
+# They don't look great. 
+
+# Let's interpret the slope coefficient without transforming first.
+summary(out)
+
+# the interpretation would be, an additional year of mjage is associated with 0.3 additional years of iralcage, and this is statistically significant at the 0.05 level. So in other words, people who try marijuana later also tend to try alcohol later.
+
+# Let's try transforming the vars.
+out.t <- lm(iralcage~log(mjage), dat)
+par(mfrow=c(2,2))
+plot(out.t)
+par(mfrow=c(1,1))
+# much better
+
+summary(out.t)
+# since we transformed x, the correct interpretation is that β represents the percentage change in Y for a one percent change in ln(X). and this is statistically significant at the .05 level.
+
+# c. For both of these, what are the confidence intervals for the relevant parameter? What is the proper way to interpret these?
+
+confint(out)
+
+# round it to 2 decimal points:
+round(confint(out), 2)
+
+# The 95% confidence interval for the slope coefficient is [0.20, 0.40]. This does not cover zero, so we can reject the null hypothesis that iralcage and mjage are unrelated. If we had collected a new sample and calculated confidence intervals 100 times, 95 of those confidence intervals would cover the true value.
+
+
+
