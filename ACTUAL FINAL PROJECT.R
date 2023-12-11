@@ -2,10 +2,12 @@
 library(tidyverse)
 library(ggmap)
 library(ggplot2)
+library(plotly)
 library(lubridate)
 library(stringr)
 library(mapview)
 library(sf)
+library(data.table)
 
 #LOAD CDPH ENVIRONMENTAL ENFORCEMENT DATA
 dat <- read_csv("/Users/nancy/Documents/GitHub/crim1200-stat/CDPH_Environmental_Enforcement.csv")
@@ -36,6 +38,9 @@ dat <- dat %>%
 
 # CHECKING FREQUENCY OF CODE VIOLATIONS ACROSS THE YEARS
 unique(dat$numeric_code)
+dat %>%
+  count(numeric_code, sort = TRUE) %>%
+  head(10)
 
 
 
@@ -113,7 +118,7 @@ enforcements_sf <- enforcements_sf%>%
                   address = address_found, full_results = TRUE)
 
 
-#RENAME COLUMNS
+ #RENAME COLUMNS
 enforcements_sf <- enforcements_sf %>% 
   rename(
     address = 'ADDRESS',
@@ -140,6 +145,12 @@ enforcements_sf <- enforcements_sf %>%
     neighborhood = 'quarter'
   )
 
+write.csv(enforcements_df, "C:\\Users\\nancy\\Desktop\\screenshots\\enforcements_df.csv", row.names=FALSE)
+
+enforcements_df <- as.data.frame(enforcements_sf)
+
+is.data.frame(enforcements_df)
+
 ## DROPPING NA NEIGHBORHOODS
 enforcements_sf <- enforcements_sf %>%
   drop_na(neighborhood)
@@ -150,12 +161,69 @@ enforcements_sf %>%
   summarise(violations = n())%>%
   print(n=78)
 
-#COUNTING NUMBER OF NEIHGBORHOODS IN ENFORCEMENT DATA
+# COUNTING NUMBER OF NEIHGBORHOODS IN ENFORCEMENT DATA
 enforcements_sf %>%
   pull(neighborhood) %>%
   unique %>%
   sort
 
+write.table(enforcements_df, "enforcements_df.txt")
+saveRDS(enforcements_df, file="enforcements_df.Rda")
+save(enforcements_df, file = "enforcements_df.RData")
+dim(enforcements_df)
 
-##UPLOAD INCOME DATA
-income <- read_csv("/Users/nancy/Documents/GitHub/crim1200-stat/Per_Capita_Income.csv")
+
+## UPLOAD INCOME DATA
+income <- read_csv("/Users/nancy/Documents/GitHub/crim1200-stat/Chicago_Per_Capita_Income.csv")
+
+# RENAME INCOME COLUMNS
+income %>%
+  rename(
+    community_area_number = "Community Area Number",
+    neighborhood = "COMMUNITY AREA NAME",
+    percent_housing_crowded = 'PERCENT OF HOUSING CROWDED',
+    percent_households_below_poverty = "PERCENT HOUSEHOLDS BELOW POVERTY",
+    percent_aged_16plus_unemployed = 'PERCENT AGED 16+ UNEMPLOYED'
+  )
+
+income %>%
+  select(`COMMUNITY AREA NAME`) %>%
+  arrange(`COMMUNITY AREA NAME`) %>%
+  print(n = 78)
+
+## REMOVE CHICAGO INCOME
+income <- income [-c(78),]
+
+## REDUCE COLUMNS
+neighborhood_income <- income %>%
+  select('COMMUNITY AREA NAME', 'PER CAPITA INCOME')
+
+
+neighborhood_income <- neighborhood_income %>%
+  rename(
+    neighborhood = 'COMMUNITY AREA NAME',
+    per_capita_income = 'PER CAPITA INCOME'
+  )
+
+
+## MERGE NEIGHBORHOOD ENFORCEMENTS AND INCOME
+
+enforcements_income <- merge(enforcements_sf, neighborhood_income, by = "neighborhood", all = TRUE)
+
+enforcements_income %>%
+  select(per_capita_income, neighborhood)
+
+
+# DATA SET WITH TOTAL NUMBER OF VIOLATION
+total_enforcements <- enforcements_sf %>%
+  group_by(neighborhood) %>%
+  summarise(violations = n())
+
+
+# MERGE TOTAL ENFORCEMENTS AND INCOME
+total_enforcements_income <- merge(total_enforcements, neighborhood_income, by = "neighborhood", all = TRUE)
+
+total_enforcements_income %>%
+  head(10)
+
+write.csv(total_enforcements_income, "C:\\Users\\nancy\\Desktop\\total_enforcements_income.csv", row.names=FALSE)
