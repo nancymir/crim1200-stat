@@ -97,22 +97,6 @@ lookup <- c("Albany Park" = 'Northwest',
 cdph_enforcements$chicago_zone <- unname(lookup[cdph_enforcements$neighborhood])
 
 
-
-## VIOLATION DESCRIPTION DATA UPLOAD
-violation_types <- read_csv("/Users/nancy/Documents/GitHub/crim1200-stat/violation_types.csv")
-
-names(violation_types)
-
-# transform to wide data
-violation_types_df <- violation_types %>%
-  pivot_wider(names_from = code_description, values_from = n)
-
-violation_types_df %>%
-  head(10)
-
-chicago_enforcements <- left_join(cdph_enforcements, violation_types_df, by = "neighborhood")
-
-
 # VIOLATION DESCRIPTION DATA LONG UPLOAD
 long_violation_types <- read_csv("/Users/nancy/Documents/GitHub/crim1200-stat/long_violation_types.csv")
 
@@ -158,105 +142,20 @@ long_chicago_enforcements <- long_chicago_enforcements %>%
   rename(per_capita_income = 'per_capita_income.y')
 
 
-# 1) EDA Single Variables
 
-# 1a) per_capita_income
-
-#quantitative
-hist(long_chicago_enforcements$per_capita_income)
-
-#visual
-hist(long_chicago_enforcements$per_capita_income)
-
-long_chicago_enforcements %>% ggplot(aes(x=factor(per_capita_income))) + geom_histogram()
-
-# 1b) hardship index
-
-#quantitative
-hist(long_chicago_enforcements$hardship_index)
-
-barplot(table(long_chicago_enforcements$hardship_index))
-
-long_chicago_enforcements %>% ggplot(aes(x=factor(hardship_index))) + geom_histogram()
-
-#categorical
-table(long_chicago_enforcements$neighborhood)
-
-#visual
-barplot(table(long_chicago_enforcements$neighborhood))
-
-tab1 <- table(long_chicago_enforcements$neighborhood)
-
-tab1 <- as.data.frame(tab1) %>% rename(neighborhood=Var1)
-
-ggplot(data = tab1, aes(x=neighborhood, y=Freq)) + geom_bar(stat = "identity")
-
-
-#CDPH ENFORCEMENTS
-
-# scatter plot
-ggplot(cdph_enforcements, aes(x = per_capita_income, y = violations, fill=chicago_zone)) +
-  geom_point() +
-  labs(title = "Scatter Plot of Violations vs. Per Capita Income", x = "Per Capita Income", y = "Violations")
-
-# bar plot
-ggplot(total_enforcements_income, aes(x = neighborhood, y = violations)) +
-  geom_bar(stat = "identity") +
-  labs(title = "Bar Plot of Violations by Neighborhood", x = "Neighborhood", y = "Violations") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-# bar plot
-ggplot(cdph_enforcements, aes(x = chicago_zone, y = violations)) +
-  geom_bar(stat = "identity") +
-  labs(title = "Chicago Zone and Their Number of Violations", x = "Chicago Zone", y = "Number of Violations") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-
-long_chicago_enforcements %>%
-  group_by(code_description) %>%
-  summarise(per_capita_income = n())
-
-# making construction / income subset
-construction_income <- long_chicago_enforcements %>%
-  filter(code_description == 'Construction site cleanliness') %>%
-  select(code_description, per_capita_income)
-
-
-## Scatter plot of the frequency of construction cleanliness violations by their appropriate income
-ggplot(construction_income, aes(x = per_capita_income)) +
-  geom_point(aes(y = ..count..), stat = "count") +
-  labs(title = "Construction Cleanliness Violations Frequency vs Per Capita Income",
-       x = "Per Capita Income",
-       y = "Frequency of code_description")
-
-# disposal / income subset
-disposal_income <- long_chicago_enforcements %>%
-  filter(code_description == 'Treatment and disposal of solid or liquid waste') %>%
-  select(code_description, per_capita_income)
-
-## Scatter plot of the frequency of disposal violations by their appropriate income
-ggplot(disposal_income, aes(x = per_capita_income)) +
-  geom_point(aes(y = ..count..), stat = "count") +
-  labs(title = "Disposal of Waste Violations Frequency vs Per Capita Income",
-       x = "Per Capita Income",
-       y = "Frequency of code_description")
-
-
-## Scatter plot of the frequency of total violations by income
-ggplot(long_chicago_enforcements, aes(x = per_capita_income)) +
-  geom_point(aes(y = ..count..), stat = "count") +
-  labs(title = "Per Capita Income vs Total Violations Frequency",
-       x = "Per Capita Income",
-       y = "Violation Frequency")
-
-
-
-# Summarize the data to get counts for each combination of per_capita_income and chicago_zone
+# Summary data of violations
 summarized_data <- long_chicago_enforcements %>%
-  group_by(per_capita_income, chicago_zone) %>%
+  group_by(per_capita_income, chicago_zone, neighborhood) %>%
   summarise(count = n())
 
-# Create a scatter plot
+## finding mean income of each chicago zone
+mean_income_by_zone <- summarized_data %>%
+  group_by(chicago_zone) %>%
+  summarize(mean_income = mean(per_capita_income))
+
+
+
+# SCATTER PLOT OF TOTAL FREQUENCY vs INCOME
 ggplot(summarized_data, aes(x = per_capita_income, y = count, fill = chicago_zone)) +
   geom_point() +
   labs(title = "Per Capita Income vs Total Violations Frequency",
@@ -264,15 +163,41 @@ ggplot(summarized_data, aes(x = per_capita_income, y = count, fill = chicago_zon
        y = "Violation Frequency")
 
 
+## H0: There is no relationship between income and number of violations issued
+## HA: There is a positive relationship between income and number of violations issued
 
-# fill colors not responding
-ggplot(summarized_data, aes(x = per_capita_income, y = count, fill = chicago_zone)) +
-  geom_point() +
-  scale_fill_manual(values = c("Far South" = "red", "Near South" = "orange", "North/Central" = "pink", "Northwest" = "blue", "Southwest" = 'purple', "West" = 'green')) +
-  labs(title = "Total Violations Frequency vs Per Capita Income",
-       x = "Per Capita Income",
-       y = "Frequency of code_description")
+out <- lm(per_capita_income~count, summarized_data)
+
+# look at diagnostics
+par(mfrow=c(2,2))
+plot(out)
+par(mfrow=c(1,1))
+
+summary(out)
+
+#transform
+out.t <- lm(per_capita_income~log(count), summarized_data)
+par(mfrow=c(2,2))
+plot(out.t)
+par(mfrow=c(1,1))
 
 
-plot(long_chicago_enforcements$per_capita_income)
+## OMITTED VALUES
+summarized_data_omit <- summarized_data[-c(73, 75, 77),]
 
+out.omit <- lm(per_capita_income~count, summarized_data_omit)
+
+# look at diagnostics
+par(mfrow=c(2,2))
+plot(out.omit)
+par(mfrow=c(1,1))
+
+summary(out.omit)
+
+#transform
+out.omitt <- lm(per_capita_income~log(count), summarized_data_omit)
+par(mfrow=c(2,2))
+plot(out.omitt)
+par(mfrow=c(1,1))
+
+summary(out.omitt)
